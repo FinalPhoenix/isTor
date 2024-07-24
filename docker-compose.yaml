@@ -1,14 +1,11 @@
-version: '3'
+version: '3.8'
+
 services:
-  web:
+  app:
     build: .
     ports:
       - "5000:5000"
     volumes:
       - .:/app
-      - tor_list_data:/app/tor_list_data
     environment:
-      - FLASK_ENV=development
-
-volumes:
-  tor_list_data:
+      - FLASK_APP=main.py
