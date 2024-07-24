@@ -132,6 +132,9 @@ def delete_ip(ip):
 
     conn = get_db_connection()
     try:
+        ip_entry = conn.execute('SELECT * FROM tor_ips WHERE ip = ?', (ip_address, )).fetchone()
+        if not ip_entry:
+            return jsonify({"error": "IP address not found"}), 404
         conn.execute('DELETE FROM tor_ips WHERE ip = ?', (ip_address, ))
         conn.commit()
     except sqlite3.Error as e:

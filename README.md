@@ -19,6 +19,7 @@ This project provides an API to check if an IP address is a Tor exit node, retri
 - [Curl Examples](#curl-examples)
 
 - [Analysis & Implementation Review](#analysis--implementation-review)
+- [Requirements](#requirements)
   
 
 ## Setup
@@ -163,6 +164,16 @@ curl  -X  GET  "http://localhost:5000/ip/2601:1c0:4400:6ff0:13a:12e9:d5a2:b9b8"
 
 ```
 
+### Delete ip address from list
+
+Example of a successful call with known ip address on list, run it again to test for the delete for an ip not on the list
+
+```bash
+
+curl -X DELETE "http://localhost:5000/ip/41.10.5.127"
+
+```
+
 # Analysis & Implementation Review
 
 Upon receiving the requirements for the project I quickly determined the key features of the application
@@ -173,6 +184,8 @@ Upon receiving the requirements for the project I quickly determined the key fea
 * Docker/Terraform implementation
 
 On initial outset, I believed that the security of dealing with a database would be the issue, but I quickly realised that it was ipv6 addresses which were going to be the hardest to work with. 
+
+I did most of my early python work in repl.it as it is easier to get started faster, once I had a working web environment, I moved over into docker and on my local machine using VSCode.
 
 ## Data Issues
 
@@ -191,3 +204,21 @@ The list provided was simple but unfortunately they made the decision to add bra
 * As mentioned earlier SQLLite won't work if this needs to scale
 * There is no auth on the API, implementing API tokens would be easy and more secure but user Authentication wasn't a requirement
 * Unit Testing
+* Multithreading works well for this basic use case, but it can be an issue for performance later on, it might be better to use Celery for task management instead of just opening a separate thread. 
+* I did Docker which was MVP, terraform using terragrunt/opentofu would be better for the use case here (if needed) 
+
+## Requirements
+
+Write a program that allows the detection and response team to query an API with a given IPv4 or IPv6 address and
+receive an acknowledgement if it is a Tor exit node
+
+* Fetch list of Tor Exit Nodes from https://secureupdates.checkpoint.com/IP-list/TOR.txt
+* Program is Portable - Dockerfile included for ease of use
+* API must front every request
+* Three types of requests
+	* DELETE single IP address
+	* GET full list of IP addresses
+	* GET exact IP address 
+* Program must persist data between restarts or during an outage - SQLLite is a file and therefore will persist
+* Schedule refresh of data - a scheduled thread will fetch new data every 24 hours
+* Minimum supporting documentation - includes Swagger API and extensive readme
