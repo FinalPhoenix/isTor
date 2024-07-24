@@ -38,7 +38,7 @@ def sanitize_ip_list(ip_list):
 def store_tor_list(ip_list):
     try:
         os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-        with sqlite3.connect(DB_PATH) as conn:
+        with sqlite3.connect(DB_PATH, check_same_thread=False) as conn:
             c = conn.cursor()
             c.execute(
                 '''CREATE TABLE IF NOT EXISTS tor_ips (ip TEXT PRIMARY KEY)''')
