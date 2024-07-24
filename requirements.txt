@@ -2,3 +2,5 @@ Flask
 requests
 logging
 sqlite3
+jsonify
+flasgger
