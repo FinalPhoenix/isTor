@@ -3,6 +3,7 @@ import logging
 import sqlite3
 from requests.exceptions import RequestException
 import os
+import ipaddress
 
 TOR_LIST_URL = "https://secureupdates.checkpoint.com/IP-list/TOR.txt"
 
@@ -19,6 +20,20 @@ def fetch_tor_list():
     except RequestException as e:
         logging.error(f"Failed to fetch Tor list: {e}")
         return []
+
+def is_valid_ip(ip):
+    try:
+        ipaddress.ip_address(ip)
+        return True
+    except ValueError:
+        return False
+
+def expand_ip(ip):
+    return str(ipaddress.ip_address(ip).exploded)
+
+def sanitize_ip_list(ip_list):
+    cleaned_ip_list = [ip.strip('[]') for ip in ip_list]  # Remove brackets
+    return [expand_ip(ip) for ip in cleaned_ip_list if is_valid_ip(ip)]
 
 def store_tor_list(ip_list):
     try:
@@ -37,6 +52,7 @@ def store_tor_list(ip_list):
 if __name__ == "__main__":
     ip_list = fetch_tor_list()
     if ip_list:
-        store_tor_list(ip_list)
+        sanitized_ip_list = sanitize_ip_list(ip_list)
+        store_tor_list(sanitized_ip_list)
     else:
         logging.error("No IPs fetched, nothing to store.")
