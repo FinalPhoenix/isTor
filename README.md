@@ -2,7 +2,9 @@
 
   
 
-This project provides an API to check if an IP address is a Tor exit node, retrieve all Tor exit nodes, and delete specific IP addresses from the list. The project uses Flask for the API, SQLite for data storage, Docker for containerization, and Terraform for deployment on AWS.
+This project provides an API to check if an IP address is a Tor exit node, retrieve all Tor exit nodes, and delete specific IP addresses from the list. The project uses Flask for the API, SQLite for data storage and Docker for containerization.
+
+(One day it might have terraform, but today is not that day.)
 
   
 
