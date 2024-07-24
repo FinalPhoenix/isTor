@@ -2,10 +2,13 @@ import requests
 import logging
 import sqlite3
 from requests.exceptions import RequestException
+import os
 
 TOR_LIST_URL = "https://secureupdates.checkpoint.com/IP-list/TOR.txt"
 
 logging.basicConfig(level=logging.INFO)
+
+DB_PATH = os.path.join(os.getcwd(), 'tor_list_data', 'tor_list.db')
 
 def fetch_tor_list():
     try:
@@ -19,10 +22,13 @@ def fetch_tor_list():
 
 def store_tor_list(ip_list):
     try:
-        with sqlite3.connect('tor_list.db') as conn:
+        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+        with sqlite3.connect(DB_PATH) as conn:
             c = conn.cursor()
-            c.execute('''CREATE TABLE IF NOT EXISTS tor_ips (ip TEXT PRIMARY KEY)''')
-            c.executemany('INSERT OR IGNORE INTO tor_ips (ip) VALUES (?)', [(ip,) for ip in ip_list])
+            c.execute(
+                '''CREATE TABLE IF NOT EXISTS tor_ips (ip TEXT PRIMARY KEY)''')
+            c.executemany('INSERT OR IGNORE INTO tor_ips (ip) VALUES (?)',
+                          [(ip,) for ip in ip_list])
             conn.commit()
         logging.info("Stored Tor exit node list successfully.")
     except sqlite3.Error as e:

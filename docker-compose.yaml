@@ -6,10 +6,9 @@ services:
       - "5000:5000"
     volumes:
       - .:/app
+      - tor_list_data:/app/tor_list_data
     environment:
       - FLASK_ENV=development
 
-  db:
-    image: sqlite
-    volumes:
-      - ./tor_list.db:/var/lib/sqlite/tor_list.db
+volumes:
+  tor_list_data:

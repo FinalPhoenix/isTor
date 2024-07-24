@@ -2,3 +2,4 @@ Flask==2.0.1
 Flasgger==0.9.5
 requests==2.25.1
 pytest==6.2.4
+werkzeug==2.0.1

@@ -4,6 +4,7 @@ import sqlite3
 import ipaddress
 import threading
 import time
+import os
 from fetch_tor_list import fetch_tor_list, store_tor_list
 
 app = Flask(__name__)
@@ -12,8 +13,7 @@ swagger_config = {
     "headers": [],
     "info": {
         "title": "isTor API",
-        "description":
-        "An API to check if an IP address is a Tor exit node, retrieve all Tor exit nodes, and delete specific IP addresses from the list.",
+        "description": "An API to check if an IP address is a Tor exit node, retrieve all Tor exit nodes, and delete specific IP addresses from the list.",
         "version": "1.0.0"
     },
     "specs": [{
@@ -22,21 +22,18 @@ swagger_config = {
         "rule_filter": lambda rule: True,
         "model_filter": lambda tag: True,
     }],
-    "static_url_path":
-    "/flasgger_static",
-    "swagger_ui":
-    True,
-    "specs_route":
-    "/"
+    "static_url_path": "/flasgger_static",
+    "swagger_ui": True,
+    "specs_route": "/"
 }
 swagger = Swagger(app, config=swagger_config)
 
+DB_PATH = os.path.join(os.getcwd(), 'tor_list_data', 'tor_list.db')
 
 def get_db_connection():
-    conn = sqlite3.connect('tor_list.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
-
 
 @app.route("/ip/<ip>", methods=["GET"])
 def check_ip(ip):
@@ -68,7 +65,7 @@ def check_ip(ip):
     try:
         with get_db_connection() as conn:
             ip_entry = conn.execute('SELECT * FROM tor_ips WHERE ip = ?',
-                                    (str(ip_address), )).fetchone()
+                                    (str(ip_address),)).fetchone()
     except sqlite3.Error as e:
         return jsonify({"error": str(e)}), 500
 
@@ -76,7 +73,6 @@ def check_ip(ip):
         return jsonify({"ip": str(ip_address), "tor_exit_node": True})
     else:
         return jsonify({"ip": str(ip_address), "tor_exit_node": False})
-
 
 @app.route("/ips", methods=["GET"])
 def get_all_ips():
@@ -105,7 +101,6 @@ def get_all_ips():
 
     return jsonify({"ips": [dict(ip) for ip in ips]})
 
-
 @app.route("/ip/<ip>", methods=["DELETE"])
 def delete_ip(ip):
     """
@@ -133,14 +128,12 @@ def delete_ip(ip):
 
     try:
         with get_db_connection() as conn:
-            conn.execute('DELETE FROM tor_ips WHERE ip = ?',
-                         (str(ip_address), ))
+            conn.execute('DELETE FROM tor_ips WHERE ip = ?', (str(ip_address),))
             conn.commit()
     except sqlite3.Error as e:
         return jsonify({"error": str(e)}), 500
 
     return jsonify({"message": f"IP {ip_address} deleted from the list."})
-
 
 def run_scheduler():
     REFRESH_INTERVAL = 24 * 60 * 60  # Refresh every 24 hours
@@ -149,7 +142,6 @@ def run_scheduler():
         ip_list = fetch_tor_list()
         store_tor_list(ip_list)
         time.sleep(REFRESH_INTERVAL)
-
 
 if __name__ == "__main__":
     # Start the scheduler in a separate thread

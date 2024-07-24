@@ -1,12 +1,13 @@
 # Tor Exit Node API
 
-This project provides an API to check if an IP address is a Tor exit node, retrieve all Tor exit nodes, and delete specific IP addresses from the list. The project uses Flask for the API, SQLite for data storage, and Docker for containerization.
+This project provides an API to check if an IP address is a Tor exit node, retrieve all Tor exit nodes, and delete specific IP addresses from the list. The project uses Flask for the API, SQLite for data storage, Docker for containerization, and Terraform for deployment on AWS.
 
 ## Table of Contents
 
 - [Setup](#setup)
 - [Running the Application](#running-the-application)
 - [API Endpoints](#api-endpoints)
+- [Curl Examples](#curl-examples)
 - [Running Tests](#running-tests)
 - [Common Troubleshooting Steps](#common-troubleshooting-steps)
 - [Contributing](#contributing)
@@ -49,22 +50,10 @@ The scheduler script runs automatically in the background every 24 hours to refr
     GET /ip/<ip>
     ```
 
-    Example:
-
-    ```bash
-    curl -X GET "http://localhost:5000/ip/1.2.3.4"
-    ```
-
 - **Get all Tor exit node IPs**:
 
     ```bash
     GET /ips
-    ```
-
-    Example:
-
-    ```bash
-    curl -X GET "http://localhost:5000/ips"
     ```
 
 - **Delete an IP from the list**:
@@ -73,28 +62,11 @@ The scheduler script runs automatically in the background every 24 hours to refr
     DELETE /ip/<ip>
     ```
 
-    Example:
+## Curl Examples
 
-    ```bash
-    curl -X DELETE "http://localhost:5000/ip/1.2.3.4"
-    ```
+### Check if an IP is a Tor exit node
 
-## Running Tests
+#### Request
 
-To ensure that the API endpoints function as expected, run the automated tests using `pytest`:
-
-1. **Install `pytest`**:
-
-    ```bash
-    pip install pytest
-    ```
-
-2. **Run the tests**:
-
-    ```bash
-    pytest
-    ```
-
-## Common Troubleshooting Steps
-
-###
+```bash
+curl -X GET "http://localhost:5000/ip/1.2.3.4"
