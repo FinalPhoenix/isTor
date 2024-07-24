@@ -1,12 +1,12 @@
-# app.py
 from flask import Flask, request, jsonify
 from flasgger import Swagger
 import sqlite3
 import ipaddress
+import threading
+import time
+from fetch_tor_list import fetch_tor_list, store_tor_list
 
 app = Flask(__name__)
-
-# Configure flasgger to use the root path as the documentation route
 
 swagger_config = {
     "headers": [],
@@ -61,19 +61,16 @@ def check_ip(ip):
               type: boolean
     """
     try:
-        # Validate the IP address format
         ip_address = ipaddress.ip_address(ip)
     except ValueError:
         return jsonify({"error": "Invalid IP address format"}), 400
 
-    conn = get_db_connection()
     try:
-        ip_entry = conn.execute('SELECT * FROM tor_ips WHERE ip = ?',
-                                (str(ip_address), )).fetchone()
+        with get_db_connection() as conn:
+            ip_entry = conn.execute('SELECT * FROM tor_ips WHERE ip = ?',
+                                    (str(ip_address), )).fetchone()
     except sqlite3.Error as e:
         return jsonify({"error": str(e)}), 500
-    finally:
-        conn.close()
 
     if ip_entry:
         return jsonify({"ip": str(ip_address), "tor_exit_node": True})
@@ -100,13 +97,11 @@ def get_all_ips():
                   ip:
                     type: string
     """
-    conn = get_db_connection()
     try:
-        ips = conn.execute('SELECT * FROM tor_ips').fetchall()
+        with get_db_connection() as conn:
+            ips = conn.execute('SELECT * FROM tor_ips').fetchall()
     except sqlite3.Error as e:
         return jsonify({"error": str(e)}), 500
-    finally:
-        conn.close()
 
     return jsonify({"ips": [dict(ip) for ip in ips]})
 
@@ -132,22 +127,34 @@ def delete_ip(ip):
               type: string
     """
     try:
-        # Validate the IP address format
         ip_address = ipaddress.ip_address(ip)
     except ValueError:
         return jsonify({"error": "Invalid IP address format"}), 400
 
-    conn = get_db_connection()
     try:
-        conn.execute('DELETE FROM tor_ips WHERE ip = ?', (str(ip_address), ))
-        conn.commit()
+        with get_db_connection() as conn:
+            conn.execute('DELETE FROM tor_ips WHERE ip = ?',
+                         (str(ip_address), ))
+            conn.commit()
     except sqlite3.Error as e:
         return jsonify({"error": str(e)}), 500
-    finally:
-        conn.close()
 
     return jsonify({"message": f"IP {ip_address} deleted from the list."})
 
 
+def run_scheduler():
+    REFRESH_INTERVAL = 24 * 60 * 60  # Refresh every 24 hours
+
+    while True:
+        ip_list = fetch_tor_list()
+        store_tor_list(ip_list)
+        time.sleep(REFRESH_INTERVAL)
+
+
 if __name__ == "__main__":
+    # Start the scheduler in a separate thread
+    scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+    scheduler_thread.start()
+
+    # Run the Flask app
     app.run(host='0.0.0.0', port=5000)

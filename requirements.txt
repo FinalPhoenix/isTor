@@ -1,6 +1,4 @@
-Flask
-requests
-logging
-sqlite3
-jsonify
-flasgger
+Flask==2.0.1
+Flasgger==0.9.5
+requests==2.25.1
+pytest==6.2.4
